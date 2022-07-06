@@ -23,6 +23,7 @@ app.use(cookieParser());
 
 // routers
 app.use("/user" , require("./routers/user-router"));
+app.use("/room" , require("./routers/rooms-router"));
 
 // listning server
 app.listen(PORT , (err)=>{

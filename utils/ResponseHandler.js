@@ -50,22 +50,26 @@ class ResponseHandler {
         this.#State.setStatus(status);
         this.#State.setMsg(msg);
 
-        this.#State.getResponse().status(status ? this.#State.getStatus() : this.#default).json({
+        this.#State.getResponse().status(status ? this.#State.getStatus() : msg?this.#default:500).json({
             msg: msg ? this.#State.getMsg() : "Internal Server Error",
             flag: false
         });
     }
 
     // this function will be used to set default response error code
-    setDefault(code) {
+    setStatus(code) {
         this.#default = code;
     }
 
     // this function will be used to set res without constructer
-    setResponseObject(res) {
+    reset(res , status) {
         // validating if note response
         if (!res) {
             throw new Error("Response object requires");
+        }
+
+        if(status){
+            this.#default = status;
         }
 
         // setting response object
