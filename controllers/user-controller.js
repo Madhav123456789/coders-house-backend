@@ -178,6 +178,8 @@ class UserController {
   async activate(req, res) {
     Response.reset(res, 400);
 
+    const _id = req._id;
+
     // destructuring data
     const { name, avtaar } = req.body;
 
@@ -359,6 +361,60 @@ class UserController {
     });
 };
 
+  // change profile picture
+  async changeAvtaar(req , res){
+    Response.reset(res);
+
+    // destructuring data
+    const {avtaar} = req.body;
+
+    // validation
+
+    if(!avtaar) return Response.NeedError("Field is empty");
+
+    const buffer = Buffer.
+    from(avtaar.replace(/^data:image\/(png|jpg|jpeg);base64,/, ""),"base64");
+
+    // creating path
+    const imagePath = `${_id}-${Date.now()}-${Math.round(Math.random() * 1e9)}.png`;
+
+    // user
+    let user;
+    try {
+      // finding user from the database
+      user = await userModel.findById(req._id);
+
+      // reading buffer using jimp package
+      const jimResp = await jimp.read(buffer);
+      // checking, Is profile pic already exist?
+      if (!user.avtaar) {
+        jimResp
+          .resize(200, jimp.AUTO)
+          .write(path.resolve(__dirname, `../data/${imagePath}`));
+      } else {
+        const splits = user.avtaar.split("/");
+        require("fs").unlink("./data/" + splits[splits.length - 1], (err) => {
+          if (!err) {
+            jimResp
+              .resize(200, jimp.AUTO)
+              .write(path.resolve(__dirname, `../data/${imagePath}`));
+          } else {
+            return Response.NeedError("Some technical issue occured");
+          }
+        });
+      }
+    } catch (err) {
+      return Response.NeedError("Could not process the image", 500);
+    };
+
+    // saving the image path to the database
+    user.avtaar = `/data/${imagePath}`;
+    const newUser = await user.save();
+
+    Response.NeedExec("Your avtaar has been updated successfully" , {
+      avtaar:newUser.avtaar
+    })
+  }
 
   // deactivating account
   async deactivate(req, res) {

@@ -12,10 +12,10 @@ const RoomSchema = new Schema(
     },
     type: {
       type: String,
-      enum: ["open", "protected", "private"],
+      enum: ["open", "social", "closed"],
       required: true,
       validate: (value) => {
-        if (!["open", "protected", "private"].includes(value)) {
+        if (!["open", "social", "closed"].includes(value)) {
           throw new Error("Invalid room type");
         }
       },

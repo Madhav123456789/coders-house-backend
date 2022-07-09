@@ -8,6 +8,10 @@ route.post("/" , UserController.sendOtp);
 route.post("/create" , UserController.verifyOtp);
 // activate account
 route.post("/activate" , middleware , UserController.activate);
+// change avtaar
+route.patch("/change/avtaar" , middleware , UserController.changeAvtaar);
+// change name
+// route.patch("/change/name" , middleware , UserController.changeName);
 // logut user
 route.get("/logout" , middleware , UserController.getLoggedOut);
 // refresh token

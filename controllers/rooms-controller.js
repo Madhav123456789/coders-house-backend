@@ -18,7 +18,7 @@ class RoomsController {
       return Response.NeedError(
         "Title should be less than or equal to 200 characters"
       );
-    } else if (!["open", "protected", "private"].includes(type)) {
+    } else if (!["open", "social", "closed"].includes(type)) {
       return Response.NeedError("Room type invalid" , 406);
     }
 
@@ -49,6 +49,13 @@ class RoomsController {
   async getOpenRooms(req, res) {
     Response.reset(res);
 
+    // used to define which page you get
+    const page = req.query.page||1;
+    // used to decide skip and documents limit
+    const limit = req.query.limit||10;
+
+    const skip = limit * (page-1);
+
     // cheking params
     const roomId = req.params.roomId;
     let rooms;
@@ -56,17 +63,19 @@ class RoomsController {
         // fetching rooms
         if(roomId){
             rooms = await roomModel
-          .find({ _id: roomId })
+          .find({ _id: roomId , type : {$in:["open" , "social"]}})
           // populating users
           .populate("owner")
           .populate("speakers")
           .populate("all_members");
         }else{
-            rooms = await roomModel.find()
+            rooms = await roomModel.find({type:"open"})
             // populating users
           .populate("owner")
           .populate("speakers")
-          .populate("all_members");
+          .populate("all_members")
+          .limit(limit)
+          .skip(skip);
         }
 
         // validation
@@ -89,12 +98,21 @@ class RoomsController {
     Response.reset(res);
 
     // visibility option
-    const options = req.query.visibility||"open";
+    const options = req.query.visibility||["open"];
+    // used to define which page you get
+    const page = req.query.page||1;
+    // used to decide skip and documents limit
+    const limit = req.query.limit||10;
+
+    const skip = limit * (page-1);
+
     const userId = req._id;
 
     // validation for option
-    if(typeof option ==="string"&& !["open", "protected", "private" , "all"].includes(options) || options === ""){
+    if(!typeof options === "string" && !["open", "social", "closed", "all"].includes(...options)){
         return Response.NeedError("Visibility is invalid" , 406);
+    }else if(typeof options === "string" && !["open", "social", "closed", "all"].includes(options)){
+      return Response.NeedError("Visibility is invalid" , 406);
     }
     // fetching user data
     let rooms;
@@ -104,11 +122,17 @@ class RoomsController {
             options==="all"?{
                 owner : userId
             }:
+            !typeof options === "string"?
             {
-                owner:userId,
-                type:{$in : [...options]}
-            }
-        );
+              owner:userId,
+              type:{$in : [...options]}
+            }:
+            {
+              owner:userId,
+              type:options
+          }
+        ).skip(skip)
+        .limit(limit);
 
         if(!rooms){
             return Response.NeedError("We couldn't find the rooms" , 404);
@@ -139,7 +163,7 @@ class RoomsController {
       return Response.NeedError(
         "Title should be less than or equal to 200 characters"
       );
-    } else if (type&&!["open", "protected", "private"].includes(type)) {
+    } else if (type&&!["open", "social", "closed"].includes(type)) {
       return Response.NeedError("Room type invalid" , 406);
     }
 
