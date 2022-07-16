@@ -5,12 +5,10 @@ const Schema = mongoose.Schema;
 const UserSchema = new Schema({
     email:{
         type:String,
-        unique:true
     },
     mobile:{
         type:String,
         required:false,
-        unique:true,
     },
     activated:{
         type:Boolean,
